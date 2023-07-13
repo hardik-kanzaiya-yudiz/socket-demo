@@ -6,14 +6,16 @@ $(document).ready(function () {
     /** start :: send message  */
     $(document).on("click", ".btnSend", function (e) {
         e.preventDefault();
-        let message = $(".txtMessage").val().trim();
-        var time = getDateTime();
-        // console.log(message);
-        // console.log(sendUserId);
-        // console.log(recieveUserId);
-        // console.log(userType);
+        let eleValue = $(this)
+            .siblings(".message-user-send")
+            .children(".txtMessage");
+        let message = eleValue.val();
+        eleValue.val("");
 
+        var time = getDateTime();
+        // console.log(recieveUserId);
         /** 1=>admin 2=>normal_user  */
+
         socket.emit("send-message", {
             message: message,
             send_user: sendUserId,
@@ -25,9 +27,32 @@ $(document).ready(function () {
     });
     /** end :: end send message  */
 
+    /** start ::  admin:active user */
+    function getActiveUserId() {
+        let activeUser = $(".list-search-user-chat").children(".active");
+        if (activeUser) {
+            let activeUserId = $(activeUser).data("user_id");
+            return activeUserId;
+        }
+        return false;
+    }
+    /** end :: admin active user */
+
     /** start :: recive_message  */
     socket.on("new-message", (request) => {
-        if (request.sendUserType == "user" && sendUserType == "user") {
+        let activeOnly = $(".content-chat-message-user.active")
+            .children(".body-chat-message-user")
+            .children()
+            .last();
+        let chatActiveUserId = getActiveUserId();
+
+        if (
+            (request.sendUserType == "user" &&
+                sendUserType == "user" &&
+                chatActiveUserId &&
+                chatActiveUserId == request.send_user) ||
+            (request.sendUserType == "admin" && sendUserType == "admin")
+        ) {
             let newMessageSentUser = `<div class="message-user-right">
             <div class="message-user-right-img">
                 <p class="mt-0 mb-0"><strong> ${userName} </strong></p>
@@ -39,46 +64,53 @@ $(document).ready(function () {
                 <strong> ${request.message} </strong>
             </div>
          </div>`;
-            $(".txtMessage").val("");
-            $(".body-chat-message-user")
-                .children()
-                .last()
-                .after(newMessageSentUser);
 
-            $(".body-chat-message-user").scrollTop(
-                $(".body-chat-message-user")[0].scrollHeight
+            activeOnly.after(newMessageSentUser);
+            let lastElementWantToappend = activeOnly.parent();
+            lastElementWantToappend.scrollTop(
+                lastElementWantToappend[0].scrollHeight
             );
+        } else {
+            if (
+                (chatActiveUserId && chatActiveUserId == request.send_user) ||
+                (chatActiveUserId &&
+                    chatActiveUserId == request.recieve_user) ||
+                (request.sendUserType =
+                    "user" &&
+                    request.recieveUserType == "admin" &&
+                    chatActiveUserId == request.send_user)
+            ) {
+                let newMessageSentUser = `<div class="message-user-left">
+                    <div class="message-user-left-img">
+                        <p class="mt-0 mb-0"><strong>  </strong></p>
+                        <img src="https://images.pexels.com/photos/2117283/pexels-photo-2117283.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="">
+                        <small>  ${getTime()} </small>
+
+                    </div>
+                    <div class="message-user-left-text">
+                        <strong> ${request.message} </strong>
+                    </div>
+                 </div>`;
+
+                let lastEle = activeOnly.after(newMessageSentUser);
+                let lastElementWantToappend = lastEle.parent();
+                lastElementWantToappend.scrollTop(
+                    lastElementWantToappend[0].scrollHeight
+                );
+            }
         }
-
-        // // console.log(senderType);
-        // if (recieveUserType == "admin") {
-        //     let recievedUser = `<div class="message-user-left">
-        //             <div class="message-user-left-img">
-        //                 <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1260&amp;h=750&amp;dpr=1" alt="">
-        //                 <p class="mt-0 mb-0"><strong>${request.message}</strong></p>
-
-        //             </div>
-        //             <div class="message-user-left-text">
-        //                 <strong>${request.message}</strong>
-        //             </div>
-        //         </div>`;
-
-        //     let newEle = $(".body-chat-message-user").children().last();
-        //     // console.log("hiiii");
-        //     newEle.after(recievedUser);
-        //     $(".body-chat-message-user").scrollTop(
-        //         $(".body-chat-message-user")[2].scrollHeight
-        //     );
-        // }
     });
     /** end :: recive_message */
 
     // getChatMessages();
     $(document).on("click", ".user-chat", function (e) {
         let userId = $(this).data("user_id");
+        let userType = $(this).data("user_type");
         let userName = $(this).data("username");
-        // console.log(userId);
-        getChatMessages(userId, userName);
+        if (userType != "user") {
+            getChatMessages(userId, userName);
+        }
     });
 
     function getChatMessages(userId, userName) {
@@ -90,16 +122,19 @@ $(document).ready(function () {
                 user_id: userId,
             },
             success: function (chatMessages, textStatus, jqXHR) {
-                console.log(textStatus);
                 if (textStatus === "success") {
+                    let activeOnly = $(
+                        ".content-chat-message-user.active"
+                    ).children(".body-chat-message-user");
+
                     if (chatMessages.length == 0) {
-                        $(".body-chat-message-user").empty();
-                        $(".body-chat-message-user").append("No any chats.");
+                        activeOnly.empty();
+                        activeOnly.append("No any chats.");
                     }
+
                     if (chatMessages.length > 0) {
-                        $(".body-chat-message-user").empty();
+                        activeOnly.empty();
                         chatMessages.forEach((chatMessage, i) => {
-                            // this is the user then get message left side
                             let isSameUser =
                                 userId == chatMessage.send_user
                                     ? "left"
@@ -120,21 +155,10 @@ $(document).ready(function () {
                                     <strong> ${chatMessage.message} </strong>
                                 </div>
                             </div>`;
-                            $(".body-chat-message-user").append(newHtml);
-                            // console.log($(".body-chat-message-user")[0]);
-                            console.log($(".body-chat-message-user"));
-                            $(".body-chat-message-user").scrollTop(
-                                $(".body-chat-message-user")[0].scrollHeight
-                            );
+                            activeOnly.append(newHtml);
+                            activeOnly.scrollTop(activeOnly[0].scrollHeight);
                         });
-                    } else {
                     }
-                    // $(".chat-window").append(chatData);
-                    // $(".txtMessage").val("");
-                    // $(".btnSend").attr("disabled", true);
-                    // $(".chat-window").scrollTop(
-                    //     $(".chat-window")[0].scrollHeight
-                    // );
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
@@ -155,6 +179,30 @@ $(document).ready(function () {
         }
     });
     /**  */
+
+    /** start : checking_online_offline */
+    let userId = $(".user-chat.active").data("user_id");
+    socket.emit("user_connected", userId);
+    // socket.emit("logout", userId);
+    // socket.on("updateLoggedInUsers", (loggedInUsers) => {
+    //     console.log(loggedInUsers);
+    //     if (loggedInUsers.includes(userId)) {
+    //             console.log("hi user is online ");
+    //     }
+    //     else {
+    //         console.log("no any user");
+    //     }
+    // });
+
+    /** only for admin */
+    const userChatElements = document.querySelectorAll(".user-chat");
+    const userIds = Array.from(userChatElements).map((userChatElement) => {
+        const userId = userChatElement.getAttribute("data-user_id");
+        // allUsers.push(userId);
+        return userId;
+    });
+
+    /** end: checking_online_offline */
 
     /** start :: get date time   */
     function getDateTime() {
@@ -179,37 +227,4 @@ $(document).ready(function () {
         return current_time;
     }
     /** end : get only time */
-
-    /** start :: sender type  */
-    function getSenderType(request) {
-        console.log(request);
-        // if (sender == 1) {
-        //     if (userType == "admin") {
-        //         var senderType = "sender";
-        //     } else {
-        //         var senderType = "receiver";
-        //     }
-        // } else if (sender == 2) {
-        //     if (userType == "admin") {
-        //         var senderType = "receiver";
-        //     } else {
-        //         var senderType = "sender";
-        //     }
-        // }
-        let sender = "";
-        let reciever = "";
-        if (
-            request.sendUserType == "user" &&
-            request.recieveUserType == "admin"
-        ) {
-            sender = "user";
-            reciever = "admin";
-        } else {
-            sender = "admin";
-            reciever = "user";
-        }
-
-        return;
-    }
-    /** end :: sender type  */
 });

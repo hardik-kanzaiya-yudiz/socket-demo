@@ -45,32 +45,20 @@ connection.connect((error) => {
     if (error) throw error;
 });
 
-var i = 0;
-let users = [];
-let overallAdmins = [];
-let overallUsers = [];
-
 io.on("connection", (socket) => {
     // console.log(socket);
-    /* Offline (Auto Disconnect By Socket) */
-    socket.on("disconnecting", (reason) => {
-        // let user_id = [...socket.rooms][1]; // request.user_id (custom_id) which we have pass at join time
-        // console.log("Disconnect User ID ::", user_id);
-        // Remove From ChatRoom
-        // for (const [key, value] of Object.entries(users)) {
-        //     if (value.includes(user_id)) {
-        //         value.splice(value.indexOf(user_id), 1);
-        //         // Free Room Key If No Users Are There
-        //         if (value.length == 0) delete users[key];
-        //     }
-        // }
-        // Remove From Over List
-        // let adminDetail = overallAdmins.indexOf(user_id);
-        // if (adminDetail > -1) overallAdmins.splice(user_id, 1);
-        // let userDetail = overallUsers.indexOf(user_id);
-        // if (userDetail > -1) overallUsers.splice(user_id, 1);
-        // sendOnlineOffline();
+
+    const loggedInUsers = [];
+    socket.on("user_connected", (userId) => {
+        // console.log(userId);
+        // Add user to the logged-in users array
+        // loggedInUsers.push(userId);
+
+        // Emit the updated logged-in users array to all connected clients
+        // io.emit("updateLoggedInUsers", loggedInUsers);
     });
+    console.log(loggedInUsers);
+    // console.log(userArr);
 
     /* start :: Send New Message */
     socket.on("send-message", (request) => {
@@ -89,18 +77,15 @@ io.on("connection", (socket) => {
                 updated_at: request.time,
             };
 
-            // console.log(addMessageData);
-
+            // return false;
             let addRecord = "INSERT INTO `chat_messages` SET ?";
             connection.query(
                 addRecord,
                 addMessageData,
                 (error, _addMessage) => {
                     if (error) throw error;
-                    // console.log("hii hardik");
                     addMessageData.sendUserType = request.send_user_type;
                     addMessageData.recieveUserType = request.recieve_user_type;
-                    // console.log(addMessageData);
                     io.emit("new-message", addMessageData);
                 }
             );
@@ -111,4 +96,17 @@ io.on("connection", (socket) => {
     });
 
     /** end :: send new message */
+
+    /** socket is disconnect then show online offline status */
+    socket.on("disconnect", (reason) => {
+        // console.log("hello discconnect socket");
+        const userId = loggedInUsers.find((userId) => userId === socket.id);
+        const index = loggedInUsers.indexOf(userId);
+        if (index > -1) {
+            loggedInUsers.splice(index, 1);
+        }
+
+        // Emit the updated logged-in users array to all connected clients
+        io.emit("updateLoggedInUsers", loggedInUsers);
+    });
 });
