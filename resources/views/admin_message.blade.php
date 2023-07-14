@@ -12,9 +12,10 @@
 <body>
     <div class="container">
         <div class="content-chat mt-20">
+            <a href=" {{ route('logout') }} "> Logout </a>
             <div class="content-chat-user">
                 <div class="head-search-chat">
-                    <h4 class="text-center">Chat Finder</h4>
+                    <h4 class="text-center">Admin Chat </h4>
                 </div>
                 <div class="search-user mt-30">
                     <input id="search-input" type="text" placeholder="Search..." name="search" class="search">
@@ -89,9 +90,17 @@
                 const selectedUsername = userChat.getAttribute('data-username');
 
                 chatMessages.forEach((chatMessage) => {
+                    // console.log(chatMessage);
                     const messageUsername = chatMessage.getAttribute('data-username');
 
                     if (messageUsername === selectedUsername) {
+                        // console.log(.add("online"));
+                        let onlineOffline = chatMessage.children[0].children[1]
+                            .children[1];
+                        // console.log(onlineOffline);
+                        onlineOffline.children[0].classList.add("online");
+                        onlineOffline.children[0].classList.remove("offline");
+                        onlineOffline.lastChild.textContent = "Online";
                         chatMessage.classList.add('active');
                     } else {
                         chatMessage.classList.remove('active');
@@ -108,6 +117,7 @@
         // Activar el primer elemento user-chat inicialmente
         // userChats[0].classList.add('active');
         // chatMessages[0].classList.add('active');
+
     });
 
     let socket = io.connect("{{ env('CHAT_URL') }}" + ':' + "{{ env('CHAT_PORT') }}");

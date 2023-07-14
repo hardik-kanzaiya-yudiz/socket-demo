@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegistreRequest;
 use App\Models\ChatMessage;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthenticateController extends Controller
 {
@@ -48,5 +50,25 @@ class AuthenticateController extends Controller
         }
 
         return $chatMessage;
+    }
+
+    function logout()
+    {
+        auth()->logout();
+        return to_route('login');
+    }
+    function register()
+    {
+        return view('register');
+    }
+
+    function postRegister(RegistreRequest $request)
+    {
+        $validate = $request->validated();
+        $validate['password'] = Hash::make($validate['password']);
+        $validate['user_type'] = "2"; //normal user
+        $validate['profile_photo'] = $request->file('profile_photo')->store('users');
+        User::create($validate);
+        return to_route('login')->with("success", "User is registered successfully.");
     }
 }

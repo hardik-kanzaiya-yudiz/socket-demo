@@ -28,9 +28,12 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('login', [AuthenticateController::class, 'login'])->name("login");
+Route::get('register', [AuthenticateController::class, 'register'])->name("register");
+Route::post('register', [AuthenticateController::class, 'postRegister'])->name("postRegister");
 Route::post('checkLogin', [AuthenticateController::class, 'checkLogin'])->name("checkLogin");
 
 Route::middleware(userLogin::class)->group(function () {
     Route::get('dashboard', [AuthenticateController::class, 'dashboard'])->name("dashboard");
-    Route::post('get-chat-messages', [ChatController::class,'getChatMessages'] )->name('getChatMessages');
+    Route::post('get-chat-messages', [ChatController::class, 'getChatMessages'])->name('getChatMessages');
+    Route::get('logout', [AuthenticateController::class, 'logout'])->name('logout');
 });

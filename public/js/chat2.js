@@ -67,6 +67,7 @@ $(document).ready(function () {
 
             activeOnly.after(newMessageSentUser);
             let lastElementWantToappend = activeOnly.parent();
+            // console.log(lastElementWantToappend);
             lastElementWantToappend.scrollTop(
                 lastElementWantToappend[0].scrollHeight
             );
@@ -182,24 +183,23 @@ $(document).ready(function () {
 
     /** start : checking_online_offline */
     let userId = $(".user-chat.active").data("user_id");
-    socket.emit("user_connected", userId);
-    // socket.emit("logout", userId);
-    // socket.on("updateLoggedInUsers", (loggedInUsers) => {
-    //     console.log(loggedInUsers);
-    //     if (loggedInUsers.includes(userId)) {
-    //             console.log("hi user is online ");
-    //     }
-    //     else {
-    //         console.log("no any user");
-    //     }
-    // });
-
-    /** only for admin */
-    const userChatElements = document.querySelectorAll(".user-chat");
-    const userIds = Array.from(userChatElements).map((userChatElement) => {
-        const userId = userChatElement.getAttribute("data-user_id");
-        // allUsers.push(userId);
-        return userId;
+    if (userId && sendUserType != "") {
+        socket.emit("user_connected", userId);
+    }
+    socket.emit("dissconnect_user", userId);
+    socket.on("updateLoggedInUsers", (loggedInUsersId) => {
+        const userChatElements = document.querySelectorAll(".user-chat");
+        Array.from(userChatElements).map((userChatElement) => {
+            const userId = userChatElement.getAttribute("data-user_id");
+            let onlineOffline = $(userChatElement)
+                .children(".user-chat-img")
+                .children("div");
+            if (loggedInUsersId.includes(userId)) {
+                onlineOffline.addClass("online").removeClass("offline");
+            } else {
+                onlineOffline.addClass("offline").removeClass("online");
+            }
+        });
     });
 
     /** end: checking_online_offline */

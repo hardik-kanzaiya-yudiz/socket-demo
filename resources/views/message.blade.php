@@ -12,9 +12,10 @@
 <body>
     <div class="container">
         <div class="content-chat mt-20">
+            <a href=" {{ route('logout') }} "> Logout </a>
             <div class="content-chat-user">
                 <div class="head-search-chat">
-                    <h4 class="text-center">Chat Finder</h4>
+                    <h4 class="text-center"> User Chat</h4>
                 </div>
 
                 <div class="search-user mt-30">
@@ -25,7 +26,8 @@
                 </div>
 
                 <div class="list-search-user-chat mt-20">
-                    <div class="user-chat" data-username="{{ $user->name }}" data-user_id="{{ $user->id }}" data-user_type="user">
+                    <div class="user-chat" data-username="{{ $user->name }}" data-user_id="{{ $user->id }}"
+                        data-user_type="user">
                         <div class="user-chat-img">
                             <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                                 alt="">

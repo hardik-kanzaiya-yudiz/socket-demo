@@ -12,22 +12,27 @@
 
 <body>
     <div class="container" style="margin-top: 20px; width: 50%">
+        <h2>Login</h2>
         <form method="POST" action="{{ route('checkLogin') }}">
             @csrf
             @if (session('error'))
                 <span class="text-danger">{{ session('error') }}</span>
             @endif
+
+            @if (session('success'))
+                <span class="text-success">{{ session('success') }}</span>
+            @endif
+
             <div class="form-outline mb-4">
-                <input type="email" name="email" id="form2Example1" class="form-control" />
-                <label class="form-label" for="form2Example1">Email address</label>
+                <input type="email" name="email" id="form2Example1" class="form-control"
+                    placeholder="Email address" />
             </div>
             @error('email')
                 <span class="text-danger">{{ $message }}</span>
             @enderror
 
             <div class="form-outline mb-4">
-                <input type="password" name="password" id="form2Example2" class="form-control" />
-                <label class="form-label" for="form2Example2">Password</label>
+                <input type="password" name="password" id="form2Example2" class="form-control" placeholder="Password" />
             </div>
             @error('password')
                 <span class="text-danger">{{ $message }}</span>

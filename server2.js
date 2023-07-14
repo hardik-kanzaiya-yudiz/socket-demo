@@ -45,19 +45,22 @@ connection.connect((error) => {
     if (error) throw error;
 });
 
+let loggedInUsers = [];
 io.on("connection", (socket) => {
     // console.log(socket);
 
-    const loggedInUsers = [];
     socket.on("user_connected", (userId) => {
-        // console.log(userId);
-        // Add user to the logged-in users array
-        // loggedInUsers.push(userId);
-
-        // Emit the updated logged-in users array to all connected clients
-        // io.emit("updateLoggedInUsers", loggedInUsers);
+        if (!loggedInUsers.includes(userId)) {
+            loggedInUsers.push(userId);
+        }
+        io.emit("updateLoggedInUsers", loggedInUsers);
     });
-    console.log(loggedInUsers);
+
+    socket.on("dissconnect_user", (userId) => {
+        loggedInUsers.filter(user => user != userId);
+    })
+
+    // console.log(loggedInUsers);
     // console.log(userArr);
 
     /* start :: Send New Message */
@@ -99,14 +102,14 @@ io.on("connection", (socket) => {
 
     /** socket is disconnect then show online offline status */
     socket.on("disconnect", (reason) => {
-        // console.log("hello discconnect socket");
-        const userId = loggedInUsers.find((userId) => userId === socket.id);
-        const index = loggedInUsers.indexOf(userId);
-        if (index > -1) {
-            loggedInUsers.splice(index, 1);
-        }
-
-        // Emit the updated logged-in users array to all connected clients
+        // console.log(loggedUserId);
+        // if (loggedInUsers) {
+        //     loggedInUsers = loggedInUsers.filter(
+        //         (user_id) => user_id != loggedUserId
+        //     );
+        // }
         io.emit("updateLoggedInUsers", loggedInUsers);
+        // console.log(loggedInUsers);
+        // console.log("user is dissconnected");
     });
 });
